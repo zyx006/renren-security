@@ -2,12 +2,18 @@ package io.renren.modules.front.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.renren.modules.front.bean.Dish;
+import io.renren.modules.front.bean.Setmeal;
 import io.renren.modules.front.bean.ShoppingCart;
 import io.renren.modules.front.dao.ShoppingCartMapper;
+import io.renren.modules.front.service.DishService;
+import io.renren.modules.front.service.SetmealService;
 import io.renren.modules.front.service.ShoppingCartService;
 import io.renren.modules.front.utils.BaseContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -18,6 +24,10 @@ import java.time.LocalDateTime;
  */
 @Service(value = "shoppingCartServiceImplFront")
 public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, ShoppingCart> implements ShoppingCartService {
+    @Autowired
+    DishService dishService;
+    @Autowired
+    SetmealService setmealService;
     @Override
     public ShoppingCart add(ShoppingCart shoppingCart) {
         //查询当前购物车的菜品/套餐是否在数据库存在
@@ -28,8 +38,12 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
         //1.2.判断查询的是菜品还是套餐
         Long dishId = shoppingCart.getDishId();
         if(dishId != null){
+            Dish dish = dishService.getById(dishId);
+            shoppingCart.setAmount(BigDecimal.valueOf(dish.getPrice()));
             lqw.eq(ShoppingCart::getDishId, dishId);
         } else {
+            Setmeal setmeal = setmealService.getById(shoppingCart.getSetmealId());
+            shoppingCart.setAmount(BigDecimal.valueOf(setmeal.getPrice()));
             lqw.eq(ShoppingCart::getSetmealId, shoppingCart.getSetmealId());
         }
         //1.3.执行查询
@@ -39,6 +53,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
             cart.setNumber(cart.getNumber()+1);
             this.updateById(cart);
         } else {
+
             //3 不存在，添加到购物车表中
             shoppingCart.setCreateDate(LocalDateTime.now());
             shoppingCart.setUserId(BaseContext.getCurrentId());

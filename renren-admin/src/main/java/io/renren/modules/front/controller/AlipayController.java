@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
  * @author : 张宇轩
@@ -45,7 +46,7 @@ public class AlipayController {
         //商户订单号，商家自定义，保持唯一性
         bizContent.put("out_trade_no", out_trade_no);
         //支付金额，最小值0.01元
-        bizContent.put("total_amount", total_amount);
+        bizContent.put("total_amount", total_amount.divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_UP));
         //订单标题，不可使用特殊符号
         bizContent.put("subject", "美食元素订单支付");
 
