@@ -23,9 +23,11 @@ public class UserServiceImpl extends CrudServiceImpl<UserDao, UserEntity, UserDT
     @Override
     public QueryWrapper<UserEntity> getWrapper(Map<String, Object> params){
         String id = (String)params.get("id");
+        String phone = (String) params.get("phone");
 
         QueryWrapper<UserEntity> wrapper = new QueryWrapper<>();
         wrapper.eq(StringUtils.isNotBlank(id), "id", id);
+        wrapper.like(StringUtils.isNotBlank(phone), "phone", phone);
 
         return wrapper;
     }
