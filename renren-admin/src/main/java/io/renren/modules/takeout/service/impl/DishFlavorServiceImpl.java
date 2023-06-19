@@ -23,9 +23,11 @@ public class DishFlavorServiceImpl extends CrudServiceImpl<DishFlavorDao, DishFl
     @Override
     public QueryWrapper<DishFlavorEntity> getWrapper(Map<String, Object> params){
         String id = (String)params.get("id");
+        Long dishId = (Long) params.get("dish_id");
 
         QueryWrapper<DishFlavorEntity> wrapper = new QueryWrapper<>();
         wrapper.eq(StringUtils.isNotBlank(id), "id", id);
+        wrapper.eq(dishId != null, "dish_id", dishId);
 
         return wrapper;
     }

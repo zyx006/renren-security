@@ -1,5 +1,6 @@
 package io.renren.modules.takeout.controller;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.renren.common.annotation.LogOperation;
 import io.renren.common.constant.Constant;
 import io.renren.common.page.PageData;
@@ -11,9 +12,13 @@ import io.renren.common.validator.group.AddGroup;
 import io.renren.common.validator.group.DefaultGroup;
 import io.renren.common.validator.group.UpdateGroup;
 import io.renren.modules.front.bean.Category;
+import io.renren.modules.front.bean.DishFlavor;
 import io.renren.modules.front.service.CategoryService;
 import io.renren.modules.takeout.dto.DishDTO;
+import io.renren.modules.takeout.dto.DishFlavorDTO;
+import io.renren.modules.takeout.entity.DishEntity;
 import io.renren.modules.takeout.excel.DishExcel;
+import io.renren.modules.takeout.service.DishFlavorService;
 import io.renren.modules.takeout.service.DishService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -26,8 +31,8 @@ import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletResponse;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 /**
@@ -42,12 +47,46 @@ import java.util.Map;
 public class DishController {
     @Autowired
     private DishService dishService;
+    @Autowired
+    private DishFlavorService dishFlavorService;
+    @Autowired
+    private io.renren.modules.front.service.DishFlavorService dishFlavorServiceFront;
 
     @Autowired
     private CategoryService categoryService;
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @PutMapping("updateStatus")
+    public Result updateStatus(@RequestParam Map<String, String> params){
+        String type = params.get("0");
+        if (type == null){
+            //此时只有单个菜品的停售/起售，直接取反
+            Long dishId = Long.valueOf(params.get("1"));
+            Integer oldStatus = dishService.get(dishId).getStatus();
+
+            DishEntity dish = new DishEntity();
+            dish.setId(dishId);
+            dish.setStatus(oldStatus == 1 ? 0 : 1);
+            dishService.updateById(dish);
+        } else {
+            Integer status = Integer.parseInt(type);
+            params.remove("0");
+
+            List<DishEntity> ids = params.values().stream().map(id -> {
+                DishEntity dish = new DishEntity();
+                dish.setId(Long.valueOf(id));
+                dish.setStatus(status);
+                return dish;
+            }).collect(Collectors.toList());
+            dishService.updateBatchById(ids);
+        }
+        //清除所有的菜品缓存数据
+        redisTemplate.delete("dish_*");
+
+        return new Result();
+    }
 
     @GetMapping("list")
     public Result<List<DishDTO>> list(@RequestParam Map<String, Object> params){
@@ -82,6 +121,12 @@ public class DishController {
     public Result<DishDTO> get(@PathVariable("id") Long id){
         DishDTO data = dishService.get(id);
 
+        //封装口味信息
+        Map<String, Object> param = new HashMap<>();
+        param.put("dish_id", data.getId());
+        List<DishFlavorDTO> flavorDTOList = dishFlavorService.list(param);
+        data.setFlavors(flavorDTOList);
+
         return new Result<DishDTO>().ok(data);
     }
 
@@ -94,6 +139,14 @@ public class DishController {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
 
         dishService.save(dto);
+        //保存口味信息
+        List<DishFlavorDTO> flavors = dto.getFlavors();
+        for (DishFlavorDTO flavor : flavors) {
+            flavor.setId(null);
+            flavor.setDishId(dto.getId());
+            dishFlavorService.save(flavor);
+        }
+
         //清除当前分类下的菜品信息
         redisTemplate.delete("dish_" + dto.getCategoryId() + "_1");
 
@@ -109,6 +162,19 @@ public class DishController {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
 
         dishService.update(dto);
+        //清除原有口味信息
+        LambdaUpdateWrapper<DishFlavor> luw = new LambdaUpdateWrapper<>();
+        luw.eq(DishFlavor::getDishId, dto.getId());
+        dishFlavorServiceFront.remove(luw);
+
+        //保存新口味信息
+        List<DishFlavorDTO> flavors = dto.getFlavors();
+        for (DishFlavorDTO flavor : flavors) {
+            flavor.setId(null);
+            flavor.setDishId(dto.getId());
+            dishFlavorService.save(flavor);
+        }
+
         //清除当前分类下的菜品信息
         redisTemplate.delete("dish_" + dto.getCategoryId() + "_1");
 
@@ -124,6 +190,13 @@ public class DishController {
         AssertUtils.isArrayEmpty(ids, "id");
 
         dishService.delete(ids);
+        //清除每个菜品的所有口味信息
+        for (Long id : ids) {
+            LambdaUpdateWrapper<DishFlavor> luw = new LambdaUpdateWrapper<>();
+            luw.eq(DishFlavor::getDishId, id);
+            dishFlavorServiceFront.remove(luw);
+        }
+
         //清除所有的菜品缓存数据
         redisTemplate.delete("dish_*");
 

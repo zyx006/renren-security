@@ -1,5 +1,7 @@
 package io.renren.modules.takeout.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
@@ -34,19 +36,23 @@ public class DishFlavorEntity {
     /**
      * 创建人
      */
-	private Long creator;
+    @TableField(fill = FieldFill.INSERT)
+    private Long creator;
     /**
      * 创建时间
      */
-	private Date createDate;
+    @TableField(fill = FieldFill.INSERT)
+    private Date createDate;
     /**
      * 修改人
      */
-	private Long updater;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private Long updater;
     /**
      * 更新时间
      */
-	private Date updateDate;
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private Date updateDate;
     /**
      * 是否删除
      */
