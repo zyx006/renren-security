@@ -44,6 +44,12 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
+    @GetMapping("list")
+    public Result<List<CategoryDTO>> list(@RequestParam Map<String, Object> params){
+        List<CategoryDTO> list = categoryService.list(params);
+        return new Result<List<CategoryDTO>>().ok(list);
+    }
+
     @GetMapping("page")
     @ApiOperation("分页")
     @ApiImplicitParams({

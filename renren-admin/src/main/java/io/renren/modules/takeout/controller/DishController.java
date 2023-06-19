@@ -10,6 +10,8 @@ import io.renren.common.validator.ValidatorUtils;
 import io.renren.common.validator.group.AddGroup;
 import io.renren.common.validator.group.DefaultGroup;
 import io.renren.common.validator.group.UpdateGroup;
+import io.renren.modules.front.bean.Category;
+import io.renren.modules.front.service.CategoryService;
 import io.renren.modules.takeout.dto.DishDTO;
 import io.renren.modules.takeout.excel.DishExcel;
 import io.renren.modules.takeout.service.DishService;
@@ -42,7 +44,16 @@ public class DishController {
     private DishService dishService;
 
     @Autowired
+    private CategoryService categoryService;
+
+    @Autowired
     private RedisTemplate redisTemplate;
+
+    @GetMapping("list")
+    public Result<List<DishDTO>> list(@RequestParam Map<String, Object> params){
+        List<DishDTO> list = dishService.list(params);
+        return new Result<List<DishDTO>>().ok(list);
+    }
 
     @GetMapping("page")
     @ApiOperation("分页")
@@ -55,7 +66,13 @@ public class DishController {
     @RequiresPermissions("takeout:dish:page")
     public Result<PageData<DishDTO>> page(@ApiIgnore @RequestParam Map<String, Object> params){
         PageData<DishDTO> page = dishService.page(params);
-
+        List<DishDTO> dishDTOList = page.getList();
+        for (DishDTO dishDTO : dishDTOList) {
+            Long categoryId = dishDTO.getCategoryId();
+            Category category = categoryService.getById(categoryId);
+            dishDTO.setCategoryName(category.getName());
+        }
+        page.setList(dishDTOList);
         return new Result<PageData<DishDTO>>().ok(page);
     }
 

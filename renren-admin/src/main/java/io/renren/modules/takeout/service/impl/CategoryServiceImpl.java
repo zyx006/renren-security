@@ -23,9 +23,11 @@ public class CategoryServiceImpl extends CrudServiceImpl<CategoryDao, CategoryEn
     @Override
     public QueryWrapper<CategoryEntity> getWrapper(Map<String, Object> params){
         String id = (String)params.get("id");
+        String type = (String) params.get("type");
 
         QueryWrapper<CategoryEntity> wrapper = new QueryWrapper<>();
         wrapper.eq(StringUtils.isNotBlank(id), "id", id);
+        wrapper.eq(StringUtils.isNotBlank(type), "type", type);
 
         return wrapper;
     }
