@@ -1,5 +1,7 @@
 package io.renren.modules.takeout.dto;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -32,16 +34,19 @@ public class CategoryDTO implements Serializable {
 	private Integer sort;
 
 	@ApiModelProperty(value = "创建人")
+	@TableField(fill = FieldFill.INSERT)
 	private Long creator;
 
 	@ApiModelProperty(value = "创建时间")
+	@TableField(fill = FieldFill.INSERT)
 	private Date createDate;
 
 	@ApiModelProperty(value = "修改人")
+	@TableField(fill = FieldFill.INSERT_UPDATE)
 	private Long updater;
 
 	@ApiModelProperty(value = "更新时间")
+	@TableField(fill = FieldFill.INSERT_UPDATE)
 	private Date updateDate;
-
 
 }
