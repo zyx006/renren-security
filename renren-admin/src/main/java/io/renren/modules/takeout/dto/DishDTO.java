@@ -1,12 +1,18 @@
 package io.renren.modules.takeout.dto;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
+import io.renren.modules.front.bean.DishFlavor;
+import io.renren.modules.takeout.entity.DishFlavorEntity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 菜品管理
@@ -50,19 +56,25 @@ public class DishDTO implements Serializable {
 	private Integer sort;
 
 	@ApiModelProperty(value = "创建人")
+	@TableField(fill = FieldFill.INSERT)
 	private Long creator;
 
 	@ApiModelProperty(value = "创建时间")
+	@TableField(fill = FieldFill.INSERT)
 	private Date createDate;
 
 	@ApiModelProperty(value = "修改人")
+	@TableField(fill = FieldFill.INSERT_UPDATE)
 	private Long updater;
 
 	@ApiModelProperty(value = "更新时间")
+	@TableField(fill = FieldFill.INSERT_UPDATE)
 	private Date updateDate;
 
 	@ApiModelProperty(value = "是否删除")
 	private Integer isDeleted;
 
+	//口味的集合
+	private List<DishFlavorDTO> flavors = new ArrayList<>();
 
 }
