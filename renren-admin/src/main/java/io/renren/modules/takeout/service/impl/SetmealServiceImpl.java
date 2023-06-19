@@ -35,13 +35,6 @@ public class SetmealServiceImpl extends CrudServiceImpl<SetmealDao, SetmealEntit
         return wrapper;
     }
 
-
-    @Override
-    public void updateStatus(int status, List<Long> ids) {
-        LambdaUpdateWrapper<SetmealEntity> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.in(SetmealEntity::getId, ids).set(SetmealEntity::getStatus, status);
-        this.update(new SetmealEntity(), wrapper);
-    }
     @Override
     public void updateStatus(List<String> ids) {
         if (ids == null || ids.isEmpty()) {

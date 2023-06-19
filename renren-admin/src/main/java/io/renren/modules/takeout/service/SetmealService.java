@@ -14,7 +14,6 @@ import java.util.List;
  */
 public interface SetmealService extends CrudService<SetmealEntity, SetmealDTO> {
 
-    void updateStatus(int status, List<Long> ids);
 
     void updateStatus(List<String> ids);
 }
