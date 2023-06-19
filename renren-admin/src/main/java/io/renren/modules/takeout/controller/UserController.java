@@ -1,5 +1,6 @@
 package io.renren.modules.takeout.controller;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.renren.common.annotation.LogOperation;
 import io.renren.common.constant.Constant;
 import io.renren.common.page.PageData;
@@ -10,8 +11,10 @@ import io.renren.common.validator.ValidatorUtils;
 import io.renren.common.validator.group.AddGroup;
 import io.renren.common.validator.group.DefaultGroup;
 import io.renren.common.validator.group.UpdateGroup;
+import io.renren.modules.front.bean.AddressBook;
 import io.renren.modules.takeout.dto.UserDTO;
 import io.renren.modules.takeout.excel.UserExcel;
+import io.renren.modules.front.service.AddressBookService;
 import io.renren.modules.takeout.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -39,6 +42,8 @@ import java.util.Map;
 public class UserController {
     @Autowired
     private UserService userService;
+    @Autowired
+    private AddressBookService addressBookService;
 
     @GetMapping("page")
     @ApiOperation("分页")
@@ -99,6 +104,13 @@ public class UserController {
         AssertUtils.isArrayEmpty(ids, "id");
 
         userService.delete(ids);
+
+        //删除每个用户的所有地址
+        for (Long id : ids) {
+            LambdaUpdateWrapper<AddressBook> luw = new LambdaUpdateWrapper<>();
+            luw.eq(AddressBook::getUserId, id);
+            addressBookService.remove(luw);
+        }
 
         return new Result();
     }
