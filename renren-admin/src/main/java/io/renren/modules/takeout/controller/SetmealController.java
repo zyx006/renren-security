@@ -17,6 +17,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +36,7 @@ import java.util.Map;
  * @author zyx
  * @since 1.0.0 2023-06-09
  */
+@Slf4j
 @RestController
 @RequestMapping("takeout/setmeal")
 @Api(tags="套餐")
@@ -52,7 +55,6 @@ public class SetmealController {
     @RequiresPermissions("takeout:setmeal:page")
     public Result<PageData<SetmealDTO>> page(@ApiIgnore @RequestParam Map<String, Object> params){
         PageData<SetmealDTO> page = setmealService.page(params);
-
         return new Result<PageData<SetmealDTO>>().ok(page);
     }
 
@@ -117,4 +119,22 @@ public class SetmealController {
         ExcelUtils.exportExcelToTarget(response, null, list, SetmealExcel.class);
     }
 
+    @PutMapping("updateStatus")
+    @ApiOperation("更新套餐状态")
+    @LogOperation("更新套餐状态")
+    @RequiresPermissions("takeout:setmeal:updateStatus")
+    @CacheEvict(value = "setmealCache", allEntries = true)
+    public Result updateStatus(@RequestParam Map<String, String> params) {
+        List<String> ids=new ArrayList<>();
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            if (key != null && value != null) {
+                ids.add(value);
+            }
+        }
+        log.info("ids=-={}",ids);
+        setmealService.updateStatus(ids);
+        return new Result();
+    }
 }

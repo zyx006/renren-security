@@ -4,6 +4,8 @@ import io.renren.common.service.CrudService;
 import io.renren.modules.takeout.dto.SetmealDTO;
 import io.renren.modules.takeout.entity.SetmealEntity;
 
+import java.util.List;
+
 /**
  * 套餐
  *
@@ -12,4 +14,7 @@ import io.renren.modules.takeout.entity.SetmealEntity;
  */
 public interface SetmealService extends CrudService<SetmealEntity, SetmealDTO> {
 
+    void updateStatus(int status, List<Long> ids);
+
+    void updateStatus(List<String> ids);
 }
