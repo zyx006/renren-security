@@ -1,5 +1,6 @@
 package io.renren.modules.takeout.controller;
 
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.renren.common.annotation.LogOperation;
 import io.renren.common.constant.Constant;
@@ -11,16 +12,14 @@ import io.renren.common.validator.ValidatorUtils;
 import io.renren.common.validator.group.AddGroup;
 import io.renren.common.validator.group.DefaultGroup;
 import io.renren.common.validator.group.UpdateGroup;
-import io.renren.modules.front.bean.Category;
-import io.renren.modules.front.utils.R;
+import io.renren.modules.front.bean.Dish;
+import io.renren.modules.front.bean.Setmeal;
+import io.renren.modules.front.service.DishService;
+import io.renren.modules.front.service.SetmealService;
 import io.renren.modules.takeout.dto.CategoryDTO;
-import io.renren.modules.takeout.entity.CategoryEntity;
 import io.renren.modules.takeout.excel.CategoryExcel;
 import io.renren.modules.takeout.service.CategoryService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.*;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -43,6 +42,10 @@ import java.util.Map;
 public class CategoryController {
     @Autowired
     private CategoryService categoryService;
+    @Autowired
+    private DishService dishService;
+    @Autowired
+    private SetmealService setmealService;
 
     @GetMapping("list")
     public Result<List<CategoryDTO>> list(@RequestParam Map<String, Object> params){
@@ -87,6 +90,7 @@ public class CategoryController {
         return new Result();
     }
 
+
     @PutMapping
     @ApiOperation("修改")
     @LogOperation("修改")
@@ -107,7 +111,22 @@ public class CategoryController {
     public Result delete(@RequestBody Long[] ids){
         //效验数据
         AssertUtils.isArrayEmpty(ids, "id");
-
+        for (Long id : ids) {
+            CategoryDTO categoryDTO=categoryService.get(id);
+            if(categoryDTO.getType()==1){
+                LambdaQueryWrapper<Dish> wrapper=new LambdaQueryWrapper<>();
+                wrapper.eq(Dish::getCategoryId,id);
+                if (!dishService.list(wrapper).isEmpty()) {
+                    return new Result().error("存在分类含有菜品或套餐!");
+                }
+            }else {
+                LambdaQueryWrapper<Setmeal> wrapper=new LambdaQueryWrapper<>();
+                wrapper.eq(Setmeal::getCategoryId,id);
+                if(!setmealService.list(wrapper).isEmpty()){
+                    return new Result().error("存在分类含有菜品或套餐!");
+                }
+            }
+        }
         categoryService.delete(ids);
 
         return new Result();
