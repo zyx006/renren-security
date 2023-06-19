@@ -59,7 +59,12 @@ public class OrdersController {
 
         List<OrdersDTO> ordersDTOS = page.getList().stream().map(ordersDTO -> {
             UserDTO userDTO = userService.get(ordersDTO.getUserId());
-            ordersDTO.setUserName(userDTO.getName());
+            if(userDTO!=null) {
+                ordersDTO.setUserName(userDTO.getName());
+            }
+            else {
+                ordersDTO.setUserName("账号已注销");
+            }
             return ordersDTO;
         }).collect(Collectors.toList());
         page.setList(ordersDTOS);
