@@ -1,5 +1,6 @@
 package io.renren.modules.takeout.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.renren.common.annotation.LogOperation;
 import io.renren.common.constant.Constant;
 import io.renren.common.page.PageData;
@@ -11,8 +12,10 @@ import io.renren.common.validator.group.AddGroup;
 import io.renren.common.validator.group.DefaultGroup;
 import io.renren.common.validator.group.UpdateGroup;
 import io.renren.modules.takeout.dto.OrderDetailDTO;
+import io.renren.modules.takeout.dto.OrdersDTO;
 import io.renren.modules.takeout.excel.OrderDetailExcel;
 import io.renren.modules.takeout.service.OrderDetailService;
+import io.renren.modules.takeout.service.OrdersService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -23,6 +26,8 @@ import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +44,8 @@ import java.util.Map;
 public class OrderDetailController {
     @Autowired
     private OrderDetailService orderDetailService;
+    @Autowired
+    private OrdersService ordersService;
 
     @GetMapping("page")
     @ApiOperation("分页")
@@ -112,5 +119,11 @@ public class OrderDetailController {
 
         ExcelUtils.exportExcelToTarget(response, null, list, OrderDetailExcel.class);
     }
-
+@GetMapping("detailInfo/{orderId}")
+    public Result Info(@PathVariable Long orderId,@ApiIgnore @RequestParam Map<String,Object> params){
+        OrdersDTO ordersDTO = ordersService.get(orderId);
+        params.put("orderId",ordersDTO.getNumber());
+        List<OrderDetailDTO> orderDetailDTOS=orderDetailService.list(params);
+        return new Result().ok(orderDetailDTOS);
+}
 }
