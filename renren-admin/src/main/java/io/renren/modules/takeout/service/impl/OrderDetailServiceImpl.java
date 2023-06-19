@@ -22,8 +22,8 @@ import java.util.Map;
  */
 @Service
 public class OrderDetailServiceImpl extends CrudServiceImpl<OrderDetailDao, OrderDetailEntity, OrderDetailDTO> implements OrderDetailService {
-@Autowired
-OrderDetailDao orderDetailDao;
+    @Autowired
+    OrderDetailDao orderDetailDao;
     @Override
     public QueryWrapper<OrderDetailEntity> getWrapper(Map<String, Object> params){
         String id = (String)params.get("orderId");

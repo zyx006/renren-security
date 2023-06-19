@@ -11,8 +11,10 @@ import io.renren.common.validator.group.AddGroup;
 import io.renren.common.validator.group.DefaultGroup;
 import io.renren.common.validator.group.UpdateGroup;
 import io.renren.modules.takeout.dto.OrdersDTO;
+import io.renren.modules.takeout.dto.UserDTO;
 import io.renren.modules.takeout.excel.OrdersExcel;
 import io.renren.modules.takeout.service.OrdersService;
+import io.renren.modules.takeout.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -25,6 +27,7 @@ import springfox.documentation.annotations.ApiIgnore;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 /**
@@ -39,19 +42,27 @@ import java.util.Map;
 public class OrdersController {
     @Autowired
     private OrdersService ordersService;
+    @Autowired
+    private UserService userService;
 
     @GetMapping("page")
     @ApiOperation("分页")
     @ApiImplicitParams({
-        @ApiImplicitParam(name = Constant.PAGE, value = "当前页码，从1开始", paramType = "query", required = true, dataType="int") ,
-        @ApiImplicitParam(name = Constant.LIMIT, value = "每页显示记录数", paramType = "query",required = true, dataType="int") ,
-        @ApiImplicitParam(name = Constant.ORDER_FIELD, value = "排序字段", paramType = "query", dataType="String") ,
-        @ApiImplicitParam(name = Constant.ORDER, value = "排序方式，可选值(asc、desc)", paramType = "query", dataType="String")
+            @ApiImplicitParam(name = Constant.PAGE, value = "当前页码，从1开始", paramType = "query", required = true, dataType="int") ,
+            @ApiImplicitParam(name = Constant.LIMIT, value = "每页显示记录数", paramType = "query",required = true, dataType="int") ,
+            @ApiImplicitParam(name = Constant.ORDER_FIELD, value = "排序字段", paramType = "query", dataType="String") ,
+            @ApiImplicitParam(name = Constant.ORDER, value = "排序方式，可选值(asc、desc)", paramType = "query", dataType="String")
     })
     @RequiresPermissions("takeout:orders:page")
     public Result<PageData<OrdersDTO>> page(@ApiIgnore @RequestParam Map<String, Object> params){
         PageData<OrdersDTO> page = ordersService.page(params);
 
+        List<OrdersDTO> ordersDTOS = page.getList().stream().map(ordersDTO -> {
+            UserDTO userDTO = userService.get(ordersDTO.getUserId());
+            ordersDTO.setUserName(userDTO.getName());
+            return ordersDTO;
+        }).collect(Collectors.toList());
+        page.setList(ordersDTOS);
         return new Result<PageData<OrdersDTO>>().ok(page);
     }
 

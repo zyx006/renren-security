@@ -119,11 +119,12 @@ public class OrderDetailController {
 
         ExcelUtils.exportExcelToTarget(response, null, list, OrderDetailExcel.class);
     }
-@GetMapping("detailInfo/{orderId}")
+
+    @GetMapping("detailInfo/{orderId}")
     public Result Info(@PathVariable Long orderId,@ApiIgnore @RequestParam Map<String,Object> params){
         OrdersDTO ordersDTO = ordersService.get(orderId);
         params.put("orderId",ordersDTO.getNumber());
         List<OrderDetailDTO> orderDetailDTOS=orderDetailService.list(params);
         return new Result().ok(orderDetailDTOS);
-}
+    }
 }
