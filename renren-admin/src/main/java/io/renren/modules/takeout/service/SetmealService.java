@@ -13,7 +13,5 @@ import java.util.List;
  * @since 1.0.0 2023-06-09
  */
 public interface SetmealService extends CrudService<SetmealEntity, SetmealDTO> {
-
-
     void updateStatus(List<String> ids);
 }

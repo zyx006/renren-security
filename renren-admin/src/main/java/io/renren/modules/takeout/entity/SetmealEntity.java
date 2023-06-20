@@ -1,5 +1,7 @@
 package io.renren.modules.takeout.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
@@ -51,18 +53,22 @@ public class SetmealEntity {
     /**
      * 创建人
      */
+    @TableField(fill = FieldFill.INSERT)
 	private Long creator;
     /**
      * 创建时间
      */
+    @TableField(fill = FieldFill.INSERT)
 	private Date createDate;
     /**
      * 修改人
      */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
 	private Long updater;
     /**
      * 更新时间
      */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
 	private Date updateDate;
     /**
      * 是否删除

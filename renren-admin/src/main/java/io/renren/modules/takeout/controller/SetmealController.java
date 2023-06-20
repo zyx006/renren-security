@@ -1,5 +1,6 @@
 package io.renren.modules.takeout.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.renren.common.annotation.LogOperation;
 import io.renren.common.constant.Constant;
 import io.renren.common.page.PageData;
@@ -10,8 +11,11 @@ import io.renren.common.validator.ValidatorUtils;
 import io.renren.common.validator.group.AddGroup;
 import io.renren.common.validator.group.DefaultGroup;
 import io.renren.common.validator.group.UpdateGroup;
+import io.renren.modules.front.bean.SetmealDish;
 import io.renren.modules.takeout.dto.SetmealDTO;
+import io.renren.modules.takeout.dto.SetmealDishDTO;
 import io.renren.modules.takeout.excel.SetmealExcel;
+import io.renren.modules.takeout.service.SetmealDishService;
 import io.renren.modules.takeout.service.SetmealService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -21,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
@@ -43,7 +48,12 @@ import java.util.Map;
 public class SetmealController {
     @Autowired
     private SetmealService setmealService;
-
+    @Autowired
+    private RedisTemplate redisTemplate;
+    @Autowired
+    private SetmealDishService setmealDishService;
+    @Autowired
+    private io.renren.modules.front.service.SetmealDishService setmealDishServiceFront;
     @GetMapping("page")
     @ApiOperation("分页")
     @ApiImplicitParams({
@@ -75,9 +85,29 @@ public class SetmealController {
     public Result save(@RequestBody SetmealDTO dto){
         //效验数据
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-
+        log.info("dto=={}",dto);
         setmealService.save(dto);
-
+        //保存套餐菜品信息
+        List<SetmealDishDTO> setmealDishes=dto.getSetmealDishes();
+        log.info("123456");
+        log.info("dishes={}",setmealDishes);
+        for (SetmealDishDTO setmealDishDTO:setmealDishes){
+            log.info("654321");
+            log.info("setmealDish={}",setmealDishDTO);
+//            SetmealDishDTO setmealDishDTO =new SetmealDishDTO();
+////            BeanUtils.copyProperties(setmealDish, setmealDishDTO);
+            setmealDishDTO.setSetmealId(dto.getId().toString());
+//            setmealDishDTO.setCopies(setmealDish.getCopies());
+//            setmealDishDTO.setDishId(setmealDish.getDishId());
+//            setmealDishDTO.setName(setmealDish.getName());
+//            setmealDishDTO.setPrice(setmealDish.getPrice());
+            log.info("setmealDishDTO=={}",setmealDishDTO);
+            setmealDishService.save(setmealDishDTO);
+//            setmealDish.setSetmealId(dto.getId().toString());
+        }
+//        setmealDishService.insertBatch(setmealDishes);
+        //清除所有的菜品缓存数据
+        redisTemplate.delete("setmeal_*");
         return new Result();
     }
 
@@ -89,9 +119,16 @@ public class SetmealController {
     public Result update(@RequestBody SetmealDTO dto){
         //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-
         setmealService.update(dto);
-
+        LambdaQueryWrapper<SetmealDish> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(SetmealDish::getSetmealId,dto.getId());
+        setmealDishServiceFront.remove(wrapper);
+        List<SetmealDishDTO> setmealDishes=dto.getSetmealDishes();
+        for (SetmealDishDTO setmealDishDTO:setmealDishes){
+            setmealDishDTO.setSetmealId(dto.getId().toString());
+            setmealDishService.save(setmealDishDTO);
+        }        //清除所有的菜品缓存数据
+        redisTemplate.delete("setmeal_*");
         return new Result();
     }
 
@@ -103,10 +140,15 @@ public class SetmealController {
     public Result delete(@RequestBody Long[] ids){
         //效验数据
         AssertUtils.isArrayEmpty(ids, "id");
-
-
         setmealService.delete(ids);
-
+        //清除SetmealDish
+        for (Long id:ids){
+            LambdaQueryWrapper<SetmealDish> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(SetmealDish::getSetmealId,id);
+            setmealDishServiceFront.remove(wrapper);
+        }
+        //清除所有的菜品缓存数据
+        redisTemplate.delete("setmeal_*");
         return new Result();
     }
 
@@ -134,7 +176,6 @@ public class SetmealController {
                 ids.add(value);
             }
         }
-        log.info("ids=-={}",ids);
         setmealService.updateStatus(ids);
         return new Result();
     }
