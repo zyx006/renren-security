@@ -1,5 +1,6 @@
 package io.renren.modules.takeout.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.renren.common.annotation.LogOperation;
 import io.renren.common.constant.Constant;
@@ -13,7 +14,11 @@ import io.renren.common.validator.group.DefaultGroup;
 import io.renren.common.validator.group.UpdateGroup;
 import io.renren.modules.front.bean.Category;
 import io.renren.modules.front.bean.DishFlavor;
+import io.renren.modules.front.bean.Setmeal;
+import io.renren.modules.front.bean.SetmealDish;
 import io.renren.modules.front.service.CategoryService;
+import io.renren.modules.front.service.SetmealDishService;
+import io.renren.modules.front.service.SetmealService;
 import io.renren.modules.takeout.dto.DishDTO;
 import io.renren.modules.takeout.dto.DishFlavorDTO;
 import io.renren.modules.takeout.entity.DishEntity;
@@ -52,6 +57,8 @@ public class DishController {
     @Autowired
     private io.renren.modules.front.service.DishFlavorService dishFlavorServiceFront;
 
+    @Autowired
+    private SetmealDishService setmealDishService;
     @Autowired
     private CategoryService categoryService;
 
@@ -188,6 +195,14 @@ public class DishController {
     public Result delete(@RequestBody Long[] ids){
         //效验数据
         AssertUtils.isArrayEmpty(ids, "id");
+        for(Long id:ids){
+            LambdaQueryWrapper<SetmealDish> wrapper=new LambdaQueryWrapper<>();
+            wrapper.eq(SetmealDish::getDishId,id);
+            if(setmealDishService.list(wrapper)!=null) {
+                return new Result().error("存在套餐内含有该菜品");
+            }
+
+        }
 
         dishService.delete(ids);
         //清除每个菜品的所有口味信息

@@ -104,6 +104,7 @@ public class SetmealController {
         //效验数据
         AssertUtils.isArrayEmpty(ids, "id");
 
+
         setmealService.delete(ids);
 
         return new Result();
@@ -120,9 +121,9 @@ public class SetmealController {
     }
 
     @PutMapping("updateStatus")
-    @ApiOperation("更新套餐状态")
-    @LogOperation("更新套餐状态")
-    @RequiresPermissions("takeout:setmeal:updateStatus")
+//    @ApiOperation("更新套餐状态")
+//    @LogOperation("更新套餐状态")
+//    @RequiresPermissions("takeout:setmeal:updateStatus")
     @CacheEvict(value = "setmealCache", allEntries = true)
     public Result updateStatus(@RequestParam Map<String, String> params) {
         List<String> ids=new ArrayList<>();
