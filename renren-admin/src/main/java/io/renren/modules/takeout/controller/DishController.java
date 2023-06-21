@@ -198,10 +198,9 @@ public class DishController {
         for(Long id:ids){
             LambdaQueryWrapper<SetmealDish> wrapper=new LambdaQueryWrapper<>();
             wrapper.eq(SetmealDish::getDishId,id);
-            if(setmealDishService.list(wrapper)!=null) {
+            if(setmealDishService.count(wrapper)!=0) {
                 return new Result().error("存在套餐内含有该菜品");
             }
-
         }
 
         dishService.delete(ids);
